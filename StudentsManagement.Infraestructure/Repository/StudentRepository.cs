@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
 using StudentsManagement.Entities;
 using StudentsManagement.Infraestructure.Data;
 using StudentsManagement.StudentsManagement.Shared.Exceptions;
@@ -41,9 +42,17 @@ namespace StudentsManagement.StudentsManagement.Infraestructure.Repository
                 _context.SaveChanges();
                 return student;
             }
+            catch (DbUpdateException dbEx) when (dbEx.InnerException is MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    var message = "duplicate.entry";
+                    throw new StudentsManagementException(message);
+                }
+                throw new StudentsManagementException("error.saving.student");
+            }
             catch (Exception ex)
             {
-                Trace.WriteLine("🔥 Error TRACE: " + ex.Message);
                 throw new StudentsManagementException(ex.InnerException.Message);
             }
         }

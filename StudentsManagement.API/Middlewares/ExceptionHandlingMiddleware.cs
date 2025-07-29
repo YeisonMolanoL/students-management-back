@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using StudentsManagement.StudentsManagement.Shared.Exceptions;
 
 namespace StudentsManagement.StudentsManagement.API.Middlewares
 {
@@ -29,21 +30,20 @@ namespace StudentsManagement.StudentsManagement.API.Middlewares
         {
             _logger.LogError(ex, $"[ERROR JSON] {ex.Message}");
             _logger.LogError(ex, $"[ERROR JSON CONTEXT] {context}");
-            int statusCode = 500;
+
+            int statusCode;
             string message;
-            if (ex.InnerException != null)
+
+            if (ex is StudentsManagementException)
             {
-                message  = ex.InnerException.Message;
-            } else
-            {
+                statusCode = StatusCodes.Status400BadRequest;
                 message = ex.Message;
             }
-
-            /*if (ex is AppException appEx)
+            else
             {
-                statusCode = appEx.StatusCode;
-                message = appEx.Message;
-            }*/
+                statusCode = StatusCodes.Status500InternalServerError;
+                message = ex.InnerException?.Message ?? ex.Message;
+            }
 
             _logger.LogError(ex, $"[ERROR] {message}");
 
